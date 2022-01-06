@@ -18,52 +18,61 @@ import os
 import json
 
 # Default image directory (relative path)
-led_position_json_filename = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'resources/led_positions.json')
+led_position_json_filename = os.path.join(
+    os.path.abspath(os.path.dirname(__file__)), "resources/led_positions.json"
+)
 
 # Load image dictionary
 with open(led_position_json_filename) as f:
     _led_positions_dict = json.load(f)
 
 
-def getAvailableLedArrays():
+def get_available_led_arrays():
     """Get list of available LED arrays."""
     return tuple(_led_positions_dict.keys())
 
 
-def getPositionsNa(device_name):
+def get_positions_na(device_name):
     """Get positions in the format [na_x, na_y]."""
     if device_name in _led_positions_dict:
-        led_positons = [(pos['x'], pos['y'], pos['z']) for pos in _led_positions_dict[device_name]]
+        led_positons = [
+            (pos["x"], pos["y"], pos["z"]) for pos in _led_positions_dict[device_name]
+        ]
         return cartToNa(led_positons)
     else:
-        raise ValueError('%s is not a valid device name')
+        raise ValueError("%s is not a valid device name")
 
 
-def getPositionsCart(device_name):
+def get_positions_cart(device_name):
     """Get positions in the format [x, y, z]."""
     if device_name in _led_positions_dict:
-        return [(pos['x'], pos['y'], pos['z']) for pos in _led_positions_dict[device_name]]
+        return [
+            (pos["x"], pos["y"], pos["z"]) for pos in _led_positions_dict[device_name]
+        ]
     else:
-        raise ValueError('%s is not a valid device name')
+        raise ValueError("%s is not a valid device name")
 
 
-def getBoardIndicies(device_name):
+def get_board_indicies(device_name):
     """Get positions in the format [board_index]."""
     if device_name in _led_positions_dict:
-        return [pos['board_index'] for pos in _led_positions_dict[device_name]]
+        return [pos["board_index"] for pos in _led_positions_dict[device_name]]
     else:
-        raise ValueError('%s is not a valid device name')
+        raise ValueError("%s is not a valid device name")
 
 
-def getPositions(device_name):
+def get_positions(device_name):
     """Get positions in the format [index, x, y, z, board_index]."""
     if device_name in _led_positions_dict:
-        return [(pos['index'], pos['x'], pos['y'], pos['z'], pos['board_index']) for pos in _led_positions_dict[device_name]]
+        return [
+            (pos["index"], pos["x"], pos["y"], pos["z"], pos["board_index"])
+            for pos in _led_positions_dict[device_name]
+        ]
     else:
-        raise ValueError('%s is not a valid device name')
+        raise ValueError("%s is not a valid device name")
 
 
-def cartToNa(point_list_cart, z_offset=0):
+def cart_to_na(point_list_cart, z_offset=0):
     """Function which converts a list of cartesian points to numerical aperture (NA)
 
     Args:cd 
@@ -73,7 +82,11 @@ def cartToNa(point_list_cart, z_offset=0):
     Returns:
         A 2D numpy array where the first dimension is the number of LEDs loaded and the second is (Na_x, NA_y)
     """
-    point_list_cart = np.asarray(point_list_cart) if np.ndim(point_list_cart) == 2 else np.asarray([point_list_cart])
+    point_list_cart = (
+        np.asarray(point_list_cart)
+        if np.ndim(point_list_cart) == 2
+        else np.asarray([point_list_cart])
+    )
     yz = np.sqrt(point_list_cart[:, 1] ** 2 + (point_list_cart[:, 2] + z_offset) ** 2)
     xz = np.sqrt(point_list_cart[:, 0] ** 2 + (point_list_cart[:, 2] + z_offset) ** 2)
 
@@ -81,7 +94,7 @@ def cartToNa(point_list_cart, z_offset=0):
     result[:, 0] = np.sin(np.arctan(point_list_cart[:, 0] / yz))
     result[:, 1] = np.sin(np.arctan(point_list_cart[:, 1] / xz))
 
-    return(result)
+    return result
 
 
 def reloadLedPositionsFile():

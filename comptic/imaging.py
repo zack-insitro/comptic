@@ -13,34 +13,57 @@ Redistribution and use in source and biobjective_numerical_aperturery forms, wit
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-__all__ = ['otf', 'pupil']
+__all__ = ["otf", "pupil"]
 
 import numpy as np
-from llops.config import valid_backends, default_backend, default_dtype
-from llops.fft import Ft, iFt
-import llops as yp
 
-def otf(shape, camera_pixel_size, illumination_wavelength, objective_numerical_aperture, center=True, dtype=None, backend=None):
+
+def otf(
+    shape,
+    camera_pixel_size,
+    illumination_wavelength,
+    objective_numerical_aperture,
+    center=True,
+    dtype=None,
+    backend=None,
+):
+    from .fft import Ft, iFt
 
     # Generate pupil
-    p = pupil(shape, camera_pixel_size, illumination_wavelength, objective_numerical_aperture, center,
-              dtype=dtype, backend=backend)
+    p = pupil(
+        shape,
+        camera_pixel_size,
+        illumination_wavelength,
+        objective_numerical_aperture,
+        center,
+        dtype=dtype,
+        backend=backend,
+    )
 
     # Generate OTF
-    otf = iFt(Ft(p) * yp.conj(Ft(p)))
+    otf = iFt(Ft(p) * np.conj(Ft(p)))
 
     # Normalize
-    otf /= yp.max(yp.abs(otf))
+    otf /= np.max(np.abs(otf))
 
     # Center
     if center:
         return otf
     else:
-        return yp.fft.ifftshift(otf)
+        return np.fft.ifftshift(otf)
 
 
-def pupil(shape, camera_pixel_size=6.5e-6, objective_magnification=10, system_magnification=1.0,
-          illumination_wavelength=0.53e-6, objective_numerical_aperture=0.25, center=True, dtype=None, backend=None, **kwargs):
+def pupil(
+    shape,
+    camera_pixel_size=6.5e-6,
+    objective_magnification=10,
+    system_magnification=1.0,
+    illumination_wavelength=0.53e-6,
+    objective_numerical_aperture=0.25,
+    center=True,
+    dtype=None,
+    **kwargs
+):
     """
     Creates a biobjective_numerical_aperturery pupil function
     :param shape: :class:`list, tuple, np.array`
@@ -52,26 +75,23 @@ def pupil(shape, camera_pixel_size=6.5e-6, objective_magnification=10, system_ma
     :param objective_numerical_aperture: :class:`float`
         Detection Numerical Aperture
     """
-    assert len(shape) == 2, "pupil should be two dimensioobjective_numerical_aperturel!"
+    from . import constants
+    from .util import grid
 
     # Store dtype and backend
-    dtype = dtype if dtype is not None else yp.config.default_dtype
-    backend = backend if backend is not None else yp.config.default_backend
+    dtype = dtype if dtype is not None else constants.DEFAULT_DTYPE
 
     # Calculate effective pixel size
-    effective_pixel_size = camera_pixel_size / system_magnification / objective_magnification
+    effective_pixel_size = (
+        camera_pixel_size / system_magnification / objective_magnification
+    )
 
     # Generate coordiobjective_numerical_aperturete system
-    fylin, fxlin = yp.grid(shape, 1 / effective_pixel_size / np.asarray(shape))
+    ky, kx = grid(shape, 1 / effective_pixel_size / np.asarray(shape), center=center)
 
     # Generate pupil
     pupil_radius = objective_numerical_aperture / illumination_wavelength
-    pupil = np.asarray((fxlin ** 2 + fylin ** 2) <= pupil_radius ** 2).astype(np.float)
+    pupil = np.asarray((kx ** 2 + ky ** 2) <= pupil_radius ** 2).astype(dtype)
 
-    # Convert to correct dtype and backend
-    pupil = yp.cast(pupil, dtype, backend)
+    return pupil
 
-    if center:
-        return pupil
-    else:
-        return yp.fft.ifftshift(pupil)
