@@ -1,5 +1,5 @@
 # General utilities
-import numpy as np
+from .constants import numpy as np
 
 
 def is_iterable(obj):

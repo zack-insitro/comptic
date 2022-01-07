@@ -15,10 +15,9 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 import imageio
 import json
-import numpy as np
+from .constants import numpy as np
 import os
 from skimage.transform import resize
-import numpy as np
 from .constants import DEFAULT_DTYPE
 
 # Default simulation shape
@@ -90,7 +89,7 @@ def _load_image(image_label, shape, dtype=None, backend=None, **kwargs):
             mode=kwargs.get("reshape_mode", "constant"),
             preserve_range=True,
             anti_aliasing=kwargs.get("anti_aliasing", False),
-        ).astype(np.float)
+        ).astype("float32")
 
     return image.astype(dtype)
 

@@ -1,5 +1,4 @@
-# Plane-wave functions
-import numpy as np
+from .constants import numpy as np
 
 
 def plane_wave_spatial(
@@ -24,8 +23,11 @@ def plane_wave_spatial(
     # Generate coordinate system
     y_grid, x_grid = grid(shape, effective_pixel_size, center=center)
 
-    # Calculate angle from offset
-    na_y, na_x = cart_to_na([source_position])[0]
+    # Convert cart to na
+    yz = np.sqrt(source_position[1] ** 2 + (source_position[2]) ** 2)
+    xz = np.sqrt(source_position[0] ** 2 + (source_position[2]) ** 2)
+    na_y = np.sin(np.arctan(source_position[0] / yz))
+    na_x = np.sin(np.arctan(source_position[1] / xz))
 
     # Generate kx and ky
     ky, kx = na_y / illumination_wavelength, na_x / illumination_wavelength

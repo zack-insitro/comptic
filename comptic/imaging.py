@@ -15,7 +15,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 __all__ = ["otf", "pupil"]
 
-import numpy as np
+from .constants import numpy as np
 
 
 def otf(
